@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools", "cython @ git+https://github.com/cython/cython.git#egg=master"]
+
+[project]
+name = "cython-test"
+version = "0.0.1"
+
+dependencies = [
+  "coverage",
+  "pytest"
+]
+
+[tool.coverage.run]
+omit = ["tests/*"]

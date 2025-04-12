@@ -1,0 +1,39 @@
+name: Coverage Repro
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+jobs:
+  tests:
+    name: ${{ matrix.os }} / ${{ matrix.python }} / ${{ matrix.cython }}
+    runs-on: ${{ matrix.os }}-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu]
+        python: ['3.11', '3.12', '3.13']
+        cython: ['cython==3.0.12', 'cython==3.1.0b1', 'cython @ git+https://github.com/cython/cython.git#egg=master']
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: patch cython version
+        run: |
+          pip install toml-cli
+          toml set build-system.requires '["setuptools", "${{ matrix.cython }}"]' --to-array --toml-path pyproject.toml
+      - name: install
+        run: pip install --editable=.
+      - name: tests
+        run: coverage run -m pytest
+      - name: cobertura
+        run: coverage xml
+      - name: codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage.xml
+          fail_ci_if_error: true
+          verbose: true
